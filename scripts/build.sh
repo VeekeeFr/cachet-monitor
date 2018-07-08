@@ -30,7 +30,7 @@ while [ "$1" != "" ]; do
 	-d | --d | -download | --download)
 		echo "Downloading..."
 		cd ${SCRIPTPATH}/../cli
-		wget -Ocachet_monitor https://github.com/VeekeeFr/cachet-monitor/releases/download/snapshot/cachet_monitor
+		wget -O cachet_monitor https://github.com/VeekeeFr/cachet-monitor/releases/download/snapshot/cachet_monitor
 		if [ $? -gt 0 ]
 		then
 			echo "Error detected..."
