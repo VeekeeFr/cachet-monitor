@@ -9,7 +9,7 @@ jobs:
   build:
     working_directory: /go/src/cachet/cli
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.10
         environment:
           GOPATH: /go
     steps:
@@ -35,7 +35,7 @@ jobs:
   test:
     working_directory: /go/src/cachet/cli
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.10
     steps:
       - restore-cache:
           keys:
