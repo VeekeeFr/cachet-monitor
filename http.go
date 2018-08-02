@@ -75,7 +75,7 @@ func (monitor *HTTPMonitor) test(l *logrus.Entry) bool {
 	req.Header.Set("User-Agent", "Cachet-Monitor")
 
 	client := &http.Client{
-		Timeout:   time.Duration(monitor.Timeout * time.Second),
+		Timeout:   time.Duration(monitor.Timeout),
 		Transport: &http.Transport{
 	                TLSClientConfig: &tls.Config{
 	                        InsecureSkipVerify: (! monitor.Strict),

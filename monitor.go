@@ -9,8 +9,8 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-const DefaultInterval = time.Second * 60
-const DefaultTimeout = time.Second
+const DefaultInterval = 60
+const DefaultTimeout = 1
 const DefaultTimeFormat = "15:04:05 Jan 2 MST"
 const DefaultHistorySize = 10
 
@@ -100,12 +100,16 @@ func (mon *AbstractMonitor) Validate() []string {
 	if mon.Interval < 1 {
 		mon.Interval = DefaultInterval
 	}
+
 	if mon.Timeout < 1 {
 		mon.Timeout = DefaultTimeout
 	}
 
+	mon.Interval = mon.Interval * time.Second
+	mon.Timeout = mon.Timeout * time.Second
+
 	if mon.Timeout > mon.Interval {
-		errs = append(errs, "Timeout greater than interval")
+		errs = append(errs, "Timeout monitor ("+ mon.Timeout.String() +") is greater than interval ("+ mon.Interval.String() +")")
 	}
 
 	if mon.ComponentID == 0 && mon.MetricID == 0 {
@@ -265,7 +269,7 @@ func (mon *AbstractMonitor) ClockStart(cfg *CachetMonitor, iface MonitorInterfac
 		mon.tick(iface)
 	}
 
-	ticker := time.NewTicker(mon.Interval * time.Second)
+	ticker := time.NewTicker(mon.Interval)
 	for {
 		select {
 		case <-ticker.C:

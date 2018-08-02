@@ -42,11 +42,11 @@ jobs:
           name: Checking delivery...
           command: ls -l cachet_monitor
       - run:
-          name: Saving git tag...
-          command: git describe --tags --abbrev=0 > /go/src/cachet/cli/cachet-monitor.tag
-      - run:
           name: Getting default configuration files...
           command: cp /go/src/cachet/example.config.* /go/src/cachet/cli
+      - run:
+          name: Saving latest tag...
+          command: git describe --tags --abbrev=0 > /go/src/cachet/cli/cachet-monitor.tag
       - save_cache:
           key: cachet-monitory-delivery-cache-{{ checksum "cachet_monitor" }}
           paths:
@@ -60,9 +60,6 @@ jobs:
       - restore-cache:
           keys:
             - cachet-monitory-delivery-cache-
-      - run:
-          name: Debug
-          command: ls -l
       - run:
           name: Listing build version...
           command: ./cachet_monitor --version
@@ -93,7 +90,8 @@ jobs:
       - run:
           name: GitHub Release...
           command: |
-            LATEST_TAG=`cat cachet-monitory.tag`
+            LATEST_TAG=`cat cachet-monitor.tag`
+            echo "Latest tag: ${LATEST_TAG}"
             if [[ "`echo ${LATEST_TAG} | tr '[:upper:]' '[:lower:]'`" == *"snapshot"* ]]; then
               echo "Prereleasing '${LATEST_TAG}'" && ./ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} --delete --prerelease --replace ${LATEST_TAG} ./dist
               echo "Prereleasing '${LATEST_TAG}'" && ./ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} --delete --prerelease --replace snapshot ./dist
