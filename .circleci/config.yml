@@ -6,6 +6,20 @@ machine:
   timezone: Europe/Paris
 
 jobs:
+
+  build_docker:
+    working_directory: /go/src/cachet
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout:
+          path: /go/src/cachet
+      - setup_remote_docker
+      - run:
+          name: Build Docker image
+          command: |
+            docker build .
+
   build:
     working_directory: /go/src/cachet/cli
     docker:
@@ -29,7 +43,7 @@ jobs:
           command: ls -l cachet_monitor
       - run:
           name: Saving git tag...
-          command: git describe --tags --abbrev=0 > /go/src/cachet/cli/cachet-monitory.tag
+          command: git describe --tags --abbrev=0 > /go/src/cachet/cli/cachet-monitor.tag
       - run:
           name: Getting default configuration files...
           command: cp /go/src/cachet/example.config.* /go/src/cachet/cli
@@ -47,6 +61,9 @@ jobs:
           keys:
             - cachet-monitory-delivery-cache-
       - run:
+          name: Debug
+          command: ls -l
+      - run:
           name: Listing build version...
           command: ./cachet_monitor --version
       - run:
@@ -62,7 +79,7 @@ jobs:
   release:
     working_directory: /go/src/cachet/cli
     docker:
-      - image: circleci/golang:1.8
+      - image: circleci/golang:1.10
     steps:
       - restore-cache:
           keys:
@@ -72,7 +89,7 @@ jobs:
           command: wget -O./ghr.zip https://github.com/tcnksm/ghr/releases/download/v0.5.4/ghr_v0.5.4_linux_amd64.zip && unzip ghr.zip && chmod +x ./ghr
       - run:
           name: Preparing release...
-          command: mkdir ./dist && mv ./cachet_monitor ./dist && cat cachet-monitory.tag
+          command: mkdir ./dist && mv ./cachet_monitor ./dist && cat cachet-monitor.tag
       - run:
           name: GitHub Release...
           command: |
@@ -88,10 +105,14 @@ workflows:
   version: 2
   build_and_test:
     jobs:
+      - build_docker
+
       - build
+
       - test:
           requires:
             - build
+
       - release:
           requires:
             - build
