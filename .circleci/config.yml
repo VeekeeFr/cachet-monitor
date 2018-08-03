@@ -7,19 +7,6 @@ machine:
 
 jobs:
 
-  build_docker:
-    working_directory: /go/src/cachet
-    docker:
-      - image: docker:17.05.0-ce-git
-    steps:
-      - checkout:
-          path: /go/src/cachet
-      - setup_remote_docker
-      - run:
-          name: Build Docker image
-          command: |
-            docker build .
-
   build:
     working_directory: /go/src/cachet/cli
     docker:
@@ -48,7 +35,7 @@ jobs:
           name: Saving latest tag...
           command: git describe --tags --abbrev=0 > /go/src/cachet/cli/cachet-monitor.tag
       - save_cache:
-          key: cachet-monitory-delivery-cache-{{ checksum "cachet_monitor" }}
+          key: cachet-monitor-delivery-cache-{{ checksum "cachet_monitor" }}
           paths:
             - /go/src/cachet/cli
 
@@ -59,7 +46,7 @@ jobs:
     steps:
       - restore-cache:
           keys:
-            - cachet-monitory-delivery-cache-
+            - cachet-monitor-delivery-cache-
       - run:
           name: Listing build version...
           command: ./cachet_monitor --version
@@ -80,7 +67,7 @@ jobs:
     steps:
       - restore-cache:
           keys:
-            - cachet-monitory-delivery-cache-
+            - cachet-monitor-delivery-cache-
       - run:
           name: Downloading GitHub Release...
           command: wget -O./ghr.zip https://github.com/tcnksm/ghr/releases/download/v0.5.4/ghr_v0.5.4_linux_amd64.zip && unzip ghr.zip && chmod +x ./ghr
@@ -99,19 +86,58 @@ jobs:
               echo "Releasing '${LATEST_TAG}'" && ./ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} --delete --replace ${LATEST_TAG} ./dist
             fi
 
+  docker_build:
+    working_directory: /go/src/cachet
+    docker:
+      - image: docker:17.05.0-ce-git
+    context: dockerhub
+    steps:
+      - checkout:
+          path: /go/src/cachet
+      - run:
+          name: Saving latest tag...
+          command: |
+            mkdir /tmp/workspace && \
+            git describe --tags --abbrev=0 > /tmp/workspace/cachet-monitor.tag
+      - setup_remote_docker
+      - run:
+          name: Build Docker image
+          command: |
+            LATEST_TAG=`cat /tmp/workspace/cachet-monitor.tag`
+            docker build -t ${DOCKERHUB_UID}/cachet-monitor:${LATEST_TAG} -t ${DOCKERHUB_UID}/cachet-monitor:latest .
+
+  docker_release:
+    working_directory: /go/src/cachet/cli
+    docker:
+      - image: docker:17.05.0-ce-git
+    context: dockerhub
+    steps:
+      - attach_workspace:
+        at: /tmp/workspace
+      - run:
+          name: DockerHub Release...
+          command: |
+            LATEST_TAG=`cat /tmp/workspace/cachet-monitor.tag`
+            docker login -e ${DOCKERHUB_EMAIL} -u ${DOCKERHUB_UID} -p ${DOCKERHUB_PWD}
+            docker push ${DOCKERHUB_UID}/cachet-monitor:${LATEST_TAG}
+            docker push ${DOCKERHUB_UID}/cachet-monitor:latest
+
 workflows:
   version: 2
-  build_and_test:
+  build_binary:
     jobs:
-      - build_docker
-
       - build
-
       - test:
           requires:
             - build
-
       - release:
           requires:
             - build
             - test
+
+  build_docker:
+    jobs:
+      - docker_build
+      - docker_release:
+          requires:
+            - docker_build
