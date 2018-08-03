@@ -17,4 +17,10 @@ FROM golang:alpine
 
 COPY --from=builder /usr/bin/cachet_monitor /usr/local/bin/cachet_monitor
 
-ENTRYPOINT [ "cachet_monitor" ]
+RUN mkdir -p /www/log
+RUN mkdir -p /www/conf
+
+VOLUME /www/log
+VOLUME /www/conf
+
+ENTRYPOINT [ "cachet_monitor", "-c", "/www/conf/cachet-monitor.yml, "--log=/www/log/cachet-monitor.log" ]

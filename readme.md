@@ -10,6 +10,11 @@
 - [x] Updates Component to Major Outage if already in Partial Outage (works with distributed monitors)
 - [x] Can be run on multiple servers and geo regions
 
+## Docker publication
+
+Docker builds are automaticaly created and stored in https://hub.docker.com/r/veekee/cachet-monitor/.
+Note: Docker images only support yml configuration file format (cachet-monitor.yml).
+
 ## Example Configuration
 
 **Note:** configuration can be in json or yaml format. [`example.config.json`](https://github.com/CastawayLabs/cachet-monitor/blob/master/example.config.json), [`example.config.yaml`](https://github.com/CastawayLabs/cachet-monitor/blob/master/example.config.yml) files.
