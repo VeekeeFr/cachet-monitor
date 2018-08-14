@@ -23,4 +23,4 @@ RUN mkdir -p /www/conf
 VOLUME /www/log
 VOLUME /www/conf
 
-ENTRYPOINT [ "cachet_monitor", "-c", "/www/conf/cachet-monitor.yml, "--log=/www/log/cachet-monitor.log" ]
+ENTRYPOINT [ "cachet_monitor", "-c", "/www/conf/cachet-monitor.yml", "--log=/www/log/cachet-monitor.log" ]
