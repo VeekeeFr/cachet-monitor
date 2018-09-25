@@ -15,6 +15,9 @@
 Docker builds are automaticaly created and stored in https://hub.docker.com/r/veekee/cachet-monitor/.
 Note: Docker images only support yml configuration file format (cachet-monitor.yml).
 
+Note 2 : Script "/www/scripts/hook-prestart.sh" will be started if present
+
+
 ## Example Configuration
 
 **Note:** configuration can be in json or yaml format. [`example.config.json`](https://github.com/CastawayLabs/cachet-monitor/blob/master/example.config.json), [`example.config.yaml`](https://github.com/CastawayLabs/cachet-monitor/blob/master/example.config.yml) files.
