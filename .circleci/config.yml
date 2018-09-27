@@ -86,28 +86,26 @@ jobs:
               echo "Releasing '${LATEST_TAG}'" && ./ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} --delete --replace ${LATEST_TAG} ./dist
             fi
 
-  docker_build:
+  docker_release:
     working_directory: /go/src/cachet
     docker:
       - image: docker:17.05.0-ce-git
     steps:
       - checkout:
           path: /go/src/cachet
-      - run:
-          name: Saving latest tag...
-          command: |
-            mkdir /tmp/workspace && \
-            git tag | sort | tail -1 > /tmp/workspace/cachet-monitor.tag
+      - restore-cache:
+          keys:
+            - cachet-monitor-delivery-cache-
       - setup_remote_docker
       - run:
           name: Build Docker image
           command: |
-            LATEST_TAG=`cat /tmp/workspace/cachet-monitor.tag`
+            LATEST_TAG=`cat cli/cachet-monitor.tag`
             docker build -t ${DOCKERHUB_UID}/cachet-monitor:${LATEST_TAG} -t ${DOCKERHUB_UID}/cachet-monitor:latest .
       - run:
           name: DockerHub Release...
           command: |
-            LATEST_TAG=`cat /tmp/workspace/cachet-monitor.tag`
+            LATEST_TAG=`cat cli/cachet-monitor.tag`
             docker login -e ${DOCKERHUB_EMAIL} -u ${DOCKERHUB_UID} -p ${DOCKERHUB_PWD}
             docker push ${DOCKERHUB_UID}/cachet-monitor:${LATEST_TAG}
             docker push ${DOCKERHUB_UID}/cachet-monitor:latest
@@ -120,12 +118,12 @@ workflows:
       - test:
           requires:
             - build
+      - docker_release:
+          context: dockerhub
+          requires:
+            - build
+            - test
       - release:
           requires:
             - build
             - test
-
-  build_docker:
-    jobs:
-      - docker_build:
-          context: dockerhub

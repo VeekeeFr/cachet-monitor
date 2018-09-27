@@ -10,9 +10,4 @@ then
 fi
 
 echo "Starting cachet process"
-while true
-do
-	sleep 5
-	echo "."
-done
-#/usr/local/bin/cachet_monitor -c /www/conf/cachet-monitor.yml --log=/www/log/cachet-monitor.log
+/usr/local/bin/cachet_monitor -c /www/conf/cachet-monitor.yml --log=/www/log/cachet-monitor.log
