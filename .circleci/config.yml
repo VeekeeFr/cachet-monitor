@@ -8,7 +8,7 @@ machine:
 jobs:
 
   build:
-    working_directory: /go/src/cachet/cli
+    working_directory: /go/src/cachet
     docker:
       - image: circleci/golang:1.10
         environment:
@@ -18,7 +18,7 @@ jobs:
           path: /go/src/cachet
       - run:
           name: Saving latest tag...
-          command: git tag | sort | tail -1 > /go/src/cachet/cli/cachet-monitor.tag
+          command: git tag | sort | tail -1 > /go/src/cachet/cachet-monitor.tag
       - run:
           name: Checking GO version...
           command: go version
@@ -27,26 +27,29 @@ jobs:
           command: go get .
       - run:
           name: Building...
-          command: go build -ldflags "-X main.AppBranch=`cat /go/src/cachet/cli/cachet-monitor.tag` -X main.Build=${CIRCLE_SHA1} -X main.BuildDate=`date +%Y-%m-%d_%H:%M:%S`" -o cachet_monitor
+          command: go build -ldflags "-X main.AppBranch=`cat /go/src/cachet/cachet-monitor.tag` -X main.Build=${CIRCLE_SHA1} -X main.BuildDate=`date +%Y-%m-%d_%H:%M:%S`" -o cachet_monitor
+      - run:
+          name: Changed permissions...
+          command: chmod +x cachet_monitor
       - run:
           name: Checking delivery...
           command: ls -l cachet_monitor
-      - run:
-          name: Getting default configuration files...
-          command: cp /go/src/cachet/example.config.* /go/src/cachet/cli
       - save_cache:
           key: cachet-monitor-delivery-cache-{{ checksum "cachet_monitor" }}
           paths:
-            - /go/src/cachet/cli
+            - /go/src/cachet
 
   test:
-    working_directory: /go/src/cachet/cli
+    working_directory: /go/src/cachet
     docker:
       - image: circleci/golang:1.10
     steps:
       - restore-cache:
           keys:
             - cachet-monitor-delivery-cache-
+      - run:
+          name: Changed permissions...
+          command: chmod +x ./cachet_monitor
       - run:
           name: Listing build version...
           command: ./cachet_monitor --version
@@ -57,11 +60,11 @@ jobs:
           name: Testing JSON configuration...
           command: ./cachet_monitor -c example.config.json --config-test
       - store_artifacts:
-          path: /go/src/cachet/cli/cachet_monitor
+          path: /go/src/cachet/cachet_monitor
           destination: artifact-file
 
   release:
-    working_directory: /go/src/cachet/cli
+    working_directory: /go/src/cachet
     docker:
       - image: circleci/golang:1.10
     steps:
@@ -103,7 +106,7 @@ jobs:
           name: Build Docker image
           command: |
             LATEST_TAG=`cat /tmp/workspace/cachet-monitor.tag`
-            docker build -t ${DOCKERHUB_UID}/cachet-monitor:${LATEST_TAG} -t ${DOCKERHUB_UID}/cachet-monitor:latest .
+            docker build --force-rm -t ${DOCKERHUB_UID}/cachet-monitor:${LATEST_TAG} -t ${DOCKERHUB_UID}/cachet-monitor:latest .
       - run:
           name: DockerHub Release...
           command: |

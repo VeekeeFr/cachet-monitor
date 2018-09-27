@@ -1,4 +1,4 @@
-package main
+package cachet
 
 import (
 	"encoding/json"
@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"cachet"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
@@ -166,8 +165,8 @@ func getLogger(logPath interface{}) *os.File {
 	return file
 }
 
-func getConfiguration(path string) (*cachet.CachetMonitor, error) {
-	var cfg cachet.CachetMonitor
+func getConfiguration(path string) (*CachetMonitor, error) {
+	var cfg CachetMonitor
 	var data []byte
 
 	// test if its a url
@@ -201,28 +200,28 @@ func getConfiguration(path string) (*cachet.CachetMonitor, error) {
 		logrus.Warnf("Unable to parse configuration file")
 	}
 
-	cfg.Monitors = make([]cachet.MonitorInterface, len(cfg.RawMonitors))
+	cfg.Monitors = make([]MonitorInterface, len(cfg.RawMonitors))
 	for index, rawMonitor := range cfg.RawMonitors {
-		var t cachet.MonitorInterface
+		var t MonitorInterface
 		var err error
 
 		// get default type
-		monType := cachet.GetMonitorType("")
+		monType := GetMonitorType("")
 		if t, ok := rawMonitor["type"].(string); ok {
-			monType = cachet.GetMonitorType(t)
+			monType = GetMonitorType(t)
 		}
 
 		switch monType {
 			case "http":
-				var s cachet.HTTPMonitor
+				var s HTTPMonitor
 				err = mapstructure.Decode(rawMonitor, &s)
 				t = &s
 			case "dns":
-				var s cachet.DNSMonitor
+				var s DNSMonitor
 				err = mapstructure.Decode(rawMonitor, &s)
 				t = &s
 			case "mock":
-				var s cachet.MockMonitor
+				var s MockMonitor
 				err = mapstructure.Decode(rawMonitor, &s)
 				t = &s
 			default:
