@@ -45,9 +45,9 @@ func (api CachetAPI) SendMetric(l *logrus.Entry, id int, lag int64) {
 	api.SendMetrics(l, "lag", []int { id }, lag)
 }
 
-// GetAPIStatus displays and error message if return values are invalid
-func (api CachetAPI) GetAPIStatus(l *logrus.Entry, label string, resp *http.Response, err error) int {
-	returnCode := 0
+// CheckAPIStatus displays and error message if return values are invalid
+func (api CachetAPI) CheckAPIStatus(l *logrus.Entry, label string, resp *http.Response, err error) bool {
+	returnCode := false
 
 	if err != nil  {
 		if l != nil {
@@ -59,7 +59,7 @@ func (api CachetAPI) GetAPIStatus(l *logrus.Entry, label string, resp *http.Resp
 				if l != nil {
 					l.Debugf("%s returns %d", label, resp.StatusCode)
 				}
-				returnCode = 1
+				returnCode = true
 			} else {
 				if l != nil {
 					l.Warnf("%s returns (response code: %d)", label, resp.StatusCode)
@@ -86,7 +86,7 @@ func (api CachetAPI) SendMetrics(l *logrus.Entry, metricname string, arr []int, 
 		})
 
 		resp,_, err := api.NewRequest("POST", "/metrics/"+strconv.Itoa(v)+"/points", jsonBytes)
-		api.GetAPIStatus(l, metricname+" metric (id: "+strconv.Itoa(v)+" => "+strconv.FormatInt(val, 10)+")", resp, err)
+		api.CheckAPIStatus(l, metricname+" metric (id: "+strconv.Itoa(v)+" => "+strconv.FormatInt(val, 10)+")", resp, err)
 	}
 }
 
@@ -98,8 +98,7 @@ func (api CachetAPI) GetComponentData(compid int) (Component) {
 	resp, body, err := api.NewRequest("GET", "/components/"+strconv.Itoa(compid), []byte(""))
 
 	var compInfo Component
-	if api.GetAPIStatus(nil, "Component data (id: "+strconv.Itoa(compid)+")", resp, err)>0 {
-
+	if api.CheckAPIStatus(nil, "Component data (id: "+strconv.Itoa(compid)+")", resp, err) {
 		err = json.Unmarshal(body.Data, &compInfo)
 	}
 	return compInfo
@@ -116,7 +115,7 @@ func (api CachetAPI) SetComponentStatus(comp *AbstractMonitor, status int) (Comp
 	resp, body, err := api.NewRequest("PUT", "/components/"+strconv.Itoa(comp.ComponentID), jsonBytes)
 
 	var compInfo Component
-	if api.GetAPIStatus(nil, "Component data (id: "+strconv.Itoa(comp.ComponentID)+")", resp, err)>0 {
+	if api.CheckAPIStatus(nil, "Component data (id: "+strconv.Itoa(comp.ComponentID)+")", resp, err) {
 		comp.currentStatus = status
 
 
