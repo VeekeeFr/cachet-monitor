@@ -29,8 +29,12 @@ func (api CachetAPI) Ping() error {
 		return err
 	}
 
-	if resp.StatusCode != 200 {
-		return errors.New("API Responded with non-200 status code")
+	if resp != nil {
+		if resp.StatusCode != 200 {
+			return errors.New("API responded with non-200 status code")
+		}
+	} else {
+		return errors.New("API didn't respond")
 	}
 
 	return nil
@@ -39,6 +43,36 @@ func (api CachetAPI) Ping() error {
 // SendMetric adds a data point to a cachet monitor - Deprecated
 func (api CachetAPI) SendMetric(l *logrus.Entry, id int, lag int64) {
 	api.SendMetrics(l, "lag", []int { id }, lag)
+}
+
+// GetAPIStatus displays and error message if return values are invalid
+func (api CachetAPI) GetAPIStatus(l *logrus.Entry, label string, resp *http.Response, err error) int {
+	returnCode := 0
+
+	if err != nil  {
+		if l != nil {
+			l.Warnf("%s returns an error (err: %v)", label, err)
+		}
+	} else {
+		if resp != nil {
+			if resp.StatusCode == 200 {
+				if l != nil {
+					l.Debugf("%s returns %d", label, resp.StatusCode)
+				}
+				returnCode = 1
+			} else {
+				if l != nil {
+					l.Warnf("%s returns (response code: %d)", label, resp.StatusCode)
+				}
+			}
+		} else {
+			if l != nil {
+				l.Warnf("%s didn't response", label)
+			}
+		}
+	}
+
+	return returnCode
 }
 
 // SendMetrics adds a data point to a cachet monitor
@@ -51,17 +85,8 @@ func (api CachetAPI) SendMetrics(l *logrus.Entry, metricname string, arr []int, 
 			"timestamp": time.Now().Unix(),
 		})
 
-		resp,_,_ := api.NewRequest("POST", "/metrics/"+strconv.Itoa(v)+"/points", jsonBytes)
-
-		if resp != nil {
-			if resp.StatusCode == 200 {
-				l.Debugf("Sending %s metric ID:%d => %v, returns %d", metricname, v, val, resp.StatusCode)
-			} else {
-				l.Warnf("Sending %s metric ID:%d => %v, returns %d", metricname, v, val, resp.StatusCode)
-			}
-		} else {
-			l.Warnf("Sending %s metric ID:%d => %v, no return", metricname, v, val)
-		}
+		resp,_, err := api.NewRequest("POST", "/metrics/"+strconv.Itoa(v)+"/points", jsonBytes)
+		api.GetAPIStatus(l, metricname+" metric (id: "+strconv.Itoa(v)+" => "+strconv.FormatInt(val, 10)+")", resp, err)
 	}
 }
 
@@ -72,14 +97,11 @@ func (api CachetAPI) GetComponentData(compid int) (Component) {
 
 	resp, body, err := api.NewRequest("GET", "/components/"+strconv.Itoa(compid), []byte(""))
 
-	if err != nil || resp.StatusCode != 200 {
-		logrus.Warnf("Could not get data from component (id: %d, status: %d, err: %v)", compid, resp.StatusCode, err)
-	}
-
 	var compInfo Component
+	if api.GetAPIStatus(nil, "Component data (id: "+strconv.Itoa(compid)+")", resp, err)>0 {
 
-	err = json.Unmarshal(body.Data, &compInfo)
-
+		err = json.Unmarshal(body.Data, &compInfo)
+	}
 	return compInfo
 }
 
@@ -93,15 +115,13 @@ func (api CachetAPI) SetComponentStatus(comp *AbstractMonitor, status int) (Comp
 
 	resp, body, err := api.NewRequest("PUT", "/components/"+strconv.Itoa(comp.ComponentID), jsonBytes)
 
-	if err != nil || resp.StatusCode != 200 {
-		logrus.Warnf("Could not get data from component (id: %d, status: %d, err: %v)", comp.ComponentID, resp.StatusCode, err)
-	}
-	comp.currentStatus = status
-
 	var compInfo Component
+	if api.GetAPIStatus(nil, "Component data (id: "+strconv.Itoa(comp.ComponentID)+")", resp, err)>0 {
+		comp.currentStatus = status
 
-	err = json.Unmarshal(body.Data, &compInfo)
 
+		err = json.Unmarshal(body.Data, &compInfo)
+	}
 	return compInfo
 }
 
