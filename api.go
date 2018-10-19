@@ -93,12 +93,13 @@ func (api CachetAPI) SendMetrics(l *logrus.Entry, metricname string, arr []int, 
 // TODO: test
 // GetComponentData
 func (api CachetAPI) GetComponentData(compid int) (Component) {
-	logrus.Debugf("Getting data from component ID:%d", compid)
+	l := logrus.WithFields(logrus.Fields{ "id": compid })
+	l.Debugf("Getting data from component ID:%d", compid)
 
 	resp, body, err := api.NewRequest("GET", "/components/"+strconv.Itoa(compid), []byte(""))
 
 	var compInfo Component
-	if api.CheckAPIStatus(nil, "Component data (id: "+strconv.Itoa(compid)+")", resp, err) {
+	if api.CheckAPIStatus(l, "Component data (id: "+strconv.Itoa(compid)+")", resp, err) {
 		err = json.Unmarshal(body.Data, &compInfo)
 	}
 	return compInfo
@@ -106,7 +107,8 @@ func (api CachetAPI) GetComponentData(compid int) (Component) {
 
 // SetComponentStatus
 func (api CachetAPI) SetComponentStatus(comp *AbstractMonitor, status int) (Component) {
-	logrus.Debugf("Setting new status (%d) to component ID: %d (instead of %d)", status, comp.ComponentID, comp.currentStatus)
+	l := logrus.WithFields(logrus.Fields{ "id": comp.ComponentID })
+	l.Debugf("Setting new status (%d) to component ID: %d (instead of %d)", status, comp.ComponentID, comp.currentStatus)
 
 	jsonBytes, _ := json.Marshal(map[string]interface{}{
 		"status":     status,
@@ -115,7 +117,7 @@ func (api CachetAPI) SetComponentStatus(comp *AbstractMonitor, status int) (Comp
 	resp, body, err := api.NewRequest("PUT", "/components/"+strconv.Itoa(comp.ComponentID), jsonBytes)
 
 	var compInfo Component
-	if api.CheckAPIStatus(nil, "Component data (id: "+strconv.Itoa(comp.ComponentID)+")", resp, err) {
+	if api.CheckAPIStatus(l, "Component data (id: "+strconv.Itoa(comp.ComponentID)+")", resp, err) {
 		comp.currentStatus = status
 		err = json.Unmarshal(body.Data, &compInfo)
 	}
