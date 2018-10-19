@@ -11,6 +11,12 @@ function usage
 	echo "       $0 -run <config file>"
 }
 
+if [ $# -lt 1 ]
+then
+	usage
+	exit 127
+fi
+
 while [ "$1" != "" ]; do
     case $1 in
 	-h | --h | -help | --help)
