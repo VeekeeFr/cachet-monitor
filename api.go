@@ -117,8 +117,6 @@ func (api CachetAPI) SetComponentStatus(comp *AbstractMonitor, status int) (Comp
 	var compInfo Component
 	if api.CheckAPIStatus(nil, "Component data (id: "+strconv.Itoa(comp.ComponentID)+")", resp, err) {
 		comp.currentStatus = status
-
-
 		err = json.Unmarshal(body.Data, &compInfo)
 	}
 	return compInfo

@@ -188,6 +188,7 @@ func (mon *AbstractMonitor) Describe() []string {
 }
 
 func (mon *AbstractMonitor) ReloadCachetData() {
+	logrus.Debugf("Reloading component's data")
 	compInfo := mon.config.API.GetComponentData(mon.ComponentID)
 
 	logrus.Infof("Current CachetHQ ID: %d", compInfo.ID)
@@ -342,7 +343,6 @@ func (mon *AbstractMonitor) tick(iface MonitorInterface) {
 	if(mon.Resync > 0) {
 		mon.resyncMod = (mon.resyncMod+1) % mon.Resync
 		if(mon.resyncMod == 0) {
-			l.Debugf("Reloading component's data")
 			mon.ReloadCachetData()
 		} else {
 			l.Debugf("Resync progressbar: %d/%d", mon.resyncMod, mon.Resync)
