@@ -12,9 +12,9 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"cachet"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/mitchellh/mapstructure"
+	cachet "github.com/xuanvan229/cachet-monitor"
 	"gopkg.in/yaml.v2"
 )
 
@@ -56,7 +56,7 @@ Environment variables:
   CACHET_DEV      set to enable dev logging`
 
 func main() {
-	arguments, err := docopt.Parse(usage, nil, true, "cachet-monitor - " + AppBranch + "\nBuild commit: " + Build + "\nBuild date: " + BuildDate, false)
+	arguments, err := docopt.Parse(usage, nil, true, "cachet-monitor - "+AppBranch+"\nBuild commit: "+Build+"\nBuild date: "+BuildDate, false)
 	if err != nil {
 		logrus.Panicf("Unable to start (reading config): %v", err)
 	}
@@ -78,18 +78,18 @@ func main() {
 
 	if loglevel := arguments["--log-level"]; loglevel != nil {
 		switch loglevel {
-			case "debug":
-				logrus.SetLevel(logrus.DebugLevel)
-			case "info":
-				logrus.SetLevel(logrus.InfoLevel)
-			case "warn":
-				logrus.SetLevel(logrus.WarnLevel)
-			case "error":
-				logrus.SetLevel(logrus.ErrorLevel)
-			case "fatal":
-				logrus.SetLevel(logrus.FatalLevel)
-			default:
-				logrus.Panicf("Unknown '%s' as log level", loglevel)
+		case "debug":
+			logrus.SetLevel(logrus.DebugLevel)
+		case "info":
+			logrus.SetLevel(logrus.InfoLevel)
+		case "warn":
+			logrus.SetLevel(logrus.WarnLevel)
+		case "error":
+			logrus.SetLevel(logrus.ErrorLevel)
+		case "fatal":
+			logrus.SetLevel(logrus.FatalLevel)
+		default:
+			logrus.Panicf("Unknown '%s' as log level", loglevel)
 		}
 	}
 
@@ -213,21 +213,21 @@ func getConfiguration(path string) (*cachet.CachetMonitor, error) {
 		}
 
 		switch monType {
-			case "http":
-				var s cachet.HTTPMonitor
-				err = mapstructure.Decode(rawMonitor, &s)
-				t = &s
-			case "dns":
-				var s cachet.DNSMonitor
-				err = mapstructure.Decode(rawMonitor, &s)
-				t = &s
-			case "mock":
-				var s cachet.MockMonitor
-				err = mapstructure.Decode(rawMonitor, &s)
-				t = &s
-			default:
-				logrus.Errorf("Invalid monitor type (index: %d) %v", index, monType)
-				continue
+		case "http":
+			var s cachet.HTTPMonitor
+			err = mapstructure.Decode(rawMonitor, &s)
+			t = &s
+		case "dns":
+			var s cachet.DNSMonitor
+			err = mapstructure.Decode(rawMonitor, &s)
+			t = &s
+		case "mock":
+			var s cachet.MockMonitor
+			err = mapstructure.Decode(rawMonitor, &s)
+			t = &s
+		default:
+			logrus.Errorf("Invalid monitor type (index: %d) %v", index, monType)
+			continue
 		}
 
 		t.GetMonitor().Type = monType
