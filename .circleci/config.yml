@@ -52,10 +52,10 @@ jobs:
           command: ./cachet_monitor --version
       - run:
           name: Testing YML configuration...
-          command: ./cachet_monitor -c example.config.yml --config-test
+          command: ./cachet_monitor --config=example.config.yml --config-test
       - run:
           name: Testing JSON configuration...
-          command: ./cachet_monitor -c example.config.json --config-test
+          command: ./cachet_monitor --config=example.config.json --config-test
       - store_artifacts:
           path: /go/src/cachet/cli/cachet_monitor
           destination: artifact-file
