@@ -58,14 +58,14 @@ Environment variables:
 func main() {
 	arguments, err := docopt.Parse(usage, nil, true, "cachet-monitor - "+AppBranch+"\nBuild commit: "+Build+"\nBuild date: "+BuildDate, false)
 	if err != nil {
-		logrus.Panicf("Unable to start (reading config): %v", err)
+		logrus.Panicf("Unable to start (argument parsing error): %v", err)
 	}
 
 	logrus.SetOutput(getLogger(arguments["--log"]))
 
 	cfg, err := getConfiguration(arguments["--config"].(string))
 	if err != nil {
-		logrus.Panicf("Unable to start (reading config): %v", err)
+		logrus.Panicf("Unable to start (getting config file): %v", err)
 	}
 
 	if immediate, ok := arguments["--immediate"]; ok {
