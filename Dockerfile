@@ -1,4 +1,4 @@
-FROM centos:7latest
+FROM centos:latest
 
 COPY cli/cachet_monitor /usr/local/bin/cachet_monitor
 COPY scripts/startCachet.sh /usr/local/bin/startCachet.sh
