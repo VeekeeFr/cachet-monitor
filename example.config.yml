@@ -15,6 +15,9 @@ monitors:
     strict: true
     # HTTP method
     method: POST
+
+    # Set proxy for http connection
+    proxy: http://proxy_host:3128
     
     # set to update component (either component_id or metric_id are required)
     component_id: 1

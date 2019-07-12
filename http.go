@@ -35,6 +35,7 @@ var defaultHTTPFixedTpl = MessageTemplate{
 type HTTPMonitor struct {
 	AbstractMonitor `mapstructure:",squash"`
 
+	Proxy             string
 	Method             string
 	ExpectedStatusCode int `mapstructure:"expected_status_code"`
 	Headers            map[string]string
@@ -108,6 +109,17 @@ func (monitor *HTTPMonitor) test(l *logrus.Entry) bool {
 					InsecureSkipVerify: (!monitor.Strict),
 				},
 			},
+		}
+	}
+
+	if(len(monitor.Proxy))
+	{
+		l.Debugf("Proxy: %s", monitor.Proxy)
+		proxyURL, err := url.Parse(monitor.Proxy)
+		if err != nil {
+			l.Infof(err)
+		} else {
+			client.Transport.Proxy = http.ProxyURL(proxyURL)
 		}
 	}
 
